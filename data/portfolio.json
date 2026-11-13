@@ -1,0 +1,11 @@
+{
+  "_comment": "Example starter data so the app has something to show on first run. Replace it from the Portfolio tab inside the app (add/remove holdings), and use the sidebar's 'Download my data' button to save your own version.",
+
+  "holdings": [
+    { "platform": "Broker A", "name": "Apple Inc", "ticker": "AAPL", "exchange": "NASDAQ", "shares": 10, "currency": "USD", "manual_price": 331.21 },
+    { "platform": "Broker A", "name": "NVIDIA Corp", "ticker": "NVDA", "exchange": "NASDAQ", "shares": 5, "currency": "USD", "manual_price": 212.17 },
+    { "platform": "Broker A", "name": "Visa Inc", "ticker": "V", "exchange": "NYSE", "shares": 3, "currency": "USD", "manual_price": 378.12 },
+    { "platform": "Broker B", "name": "iShares Core S&P 500 ETF (ASX)", "ticker": "IVV.AX", "exchange": "ASX", "shares": 20, "currency": "AUD", "manual_price": 70.98 },
+    { "platform": "Broker B", "name": "Smart US 500 ETF", "ticker": "USF.NZ", "exchange": "NZX", "shares": 15, "currency": "NZD", "manual_price": 23.00 }
+  ]
+}

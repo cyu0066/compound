@@ -1,0 +1,8 @@
+{
+  "_comment": "Tickers you're watching but don't currently hold. Add/remove from the Watchlist tab.",
+
+  "watchlist": [
+    { "ticker": "TSLA", "note": "" },
+    { "ticker": "GOOGL", "note": "" }
+  ]
+}

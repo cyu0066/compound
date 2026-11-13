@@ -1,0 +1,9 @@
+streamlit>=1.67
+pandas>=2.0
+numpy>=1.26
+plotly>=5.20
+yfinance>=0.2.40
+
+# Optional: enables the "keep prices updating automatically" toggle.
+# The app runs fine without it -- you'll just refresh manually or on interaction.
+streamlit-autorefresh>=1.0.1

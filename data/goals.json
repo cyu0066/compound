@@ -1,0 +1,8 @@
+{
+  "_comment": "Example goals loaded on first run -- add, edit, or delete these from the Goals tab. 'years' is measured from today.",
+
+  "goals": [
+    { "name": "Emergency fund", "target_amount": 10000, "years": 1 },
+    { "name": "House deposit", "target_amount": 100000, "years": 6 }
+  ]
+}
