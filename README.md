@@ -5,8 +5,10 @@ a personal project to track my own investments across brokers and currencies,
 and designed generally enough that anyone can drop in their own holdings.
 
 It started as a single-purpose calculator and grew into an analysis tool.
-instead of just showing a balance, it estimates **how likely you are to hit
+Instead of just showing a balance, it estimates **how likely you are to hit
 your goals** and **what to buy next to stay on target**.
+
+**[Try a live app demo](https://compound-cyu.streamlit.app)**
 
 ## Features
 
@@ -15,7 +17,7 @@ your goals** and **what to buy next to stay on target**.
 - **Multi-currency portfolio** (AUD/USD/NZD), consolidated into a single AUD
   total
 - **Monte Carlo goal probabilities**: instead of one smooth projection at a
-  fixed return, Compound simulates 5,000 possible futures and report the **chance of
+  fixed return, Compound simulates 5,000 possible futures and reports the **chance of
   reaching each goal**, plus a poor/typical/good range of outcomes and a fan
   chart. Volatility is estimated from about two years of your holdings' price
   history, or set manually.
@@ -34,6 +36,7 @@ your goals** and **what to buy next to stay on target**.
 - **No login or database required**. Your data lives in the browser session while you
   use it. You can also download it as a JSON file (holdings, goals, watchlist and target
   weights) to pick up where you left off next time.
+  
 
 ## Screenshot
 
