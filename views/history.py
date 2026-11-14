@@ -5,7 +5,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from ui.state import HISTORY_PATH
 from ui.theme import page_header, style_figure, money, ACCENT
 
 ctx = st.session_state["_ctx"]
@@ -15,19 +14,23 @@ page_header(
     "Log a snapshot each time you check in to build a record of how your portfolio really moved.",
 )
 
-history_df = (
-    pd.read_csv(HISTORY_PATH, parse_dates=["date"]) if HISTORY_PATH.exists()
-    else pd.DataFrame(columns=["date", "total_value_aud", "note"])
+st.caption(
+    "Snapshots live in this browser session and are included in the file you download from Settings, "
+    "so download after saving one or it will be lost when you close the tab."
 )
 
 st.header("Save a snapshot")
 with st.form("snapshot_form", clear_on_submit=True):
     note = st.text_input("Note (optional)")
     if st.form_submit_button(f"Save today's snapshot ({money(ctx.total_value)})"):
-        new_row = pd.DataFrame([{"date": pd.Timestamp(date.today()), "total_value_aud": ctx.total_value, "note": note}])
-        history_df = pd.concat([history_df, new_row], ignore_index=True)
-        history_df.to_csv(HISTORY_PATH, index=False)
+        st.session_state.history.append(
+            {"date": date.today().isoformat(), "total_value_aud": ctx.total_value, "note": note}
+        )
         st.success("Saved.")
+
+history_df = pd.DataFrame(st.session_state.history, columns=["date", "total_value_aud", "note"])
+history_df["date"] = pd.to_datetime(history_df["date"])
+history_df = history_df.sort_values("date")
 
 st.header("Over time")
 if len(history_df) > 0:
