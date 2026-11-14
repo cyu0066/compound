@@ -7,6 +7,8 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 
+from .checks import usable_rate
+
 try:
     import yfinance as yf
     YFINANCE_AVAILABLE = True
@@ -15,6 +17,10 @@ except ImportError:
 
 CACHE_TTL_SECONDS = 30
 HISTORY_TTL_SECONDS = 3600  # daily history barely changes, so cache it for an hour
+FX_TTL_SECONDS = 300  # exchange rates: refresh every five minutes
+CURRENCY_TTL_SECONDS = 86400  # a ticker's trading currency doesn't change
+
+FX_SYMBOLS = {"aud_usd": "AUDUSD=X", "aud_nzd": "AUDNZD=X"}  # Yahoo: units of the second currency per 1 AUD
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS, show_spinner=False)
@@ -36,17 +42,48 @@ def _fetch_quote(ticker: str) -> tuple[Optional[float], Optional[float]]:
         return None, None
 
 
+@st.cache_data(ttl=CURRENCY_TTL_SECONDS, show_spinner=False)
+def _fetch_currency(ticker: str) -> Optional[str]:
+    """The currency a ticker trades in, as reported by Yahoo Finance (e.g. "USD"), or None."""
+    if not YFINANCE_AVAILABLE:
+        return None
+    try:
+        currency = yf.Ticker(ticker).fast_info.get("currency")
+        return str(currency).upper() if currency else None
+    except Exception:
+        return None
+
+
 def attach_live_prices(holdings: list) -> list:
-    """Mutates each Holding in place with live_price/price_source, then returns the list."""
+    """Mutates each Holding in place with live_price/price_source/reported_currency, then returns the list."""
     for h in holdings:
         last, _ = _fetch_quote(h.ticker)
         if last is not None:
             h.live_price = last
             h.price_source = "live"
+            h.reported_currency = _fetch_currency(h.ticker)
         else:
             h.live_price = None
+            h.reported_currency = None
             h.price_source = "manual" if h.manual_price is not None else "unavailable"
     return holdings
+
+
+@st.cache_data(ttl=FX_TTL_SECONDS, show_spinner=False)
+def _fetch_fx(symbol: str) -> Optional[float]:
+    if not YFINANCE_AVAILABLE:
+        return None
+    try:
+        info = yf.Ticker(symbol).fast_info
+        rate = info.get("lastPrice") or info.get("last_price")
+        return float(rate) if usable_rate(rate) else None
+    except Exception:
+        return None
+
+
+def fetch_fx_rates() -> dict:
+    """{"aud_usd": USD per 1 AUD, "aud_nzd": NZD per 1 AUD}; a value is None if unavailable."""
+    return {key: _fetch_fx(symbol) for key, symbol in FX_SYMBOLS.items()}
 
 
 def attach_watchlist_prices(items: list) -> list:
@@ -88,3 +125,5 @@ def fetch_price_history(tickers) -> pd.DataFrame:
 def clear_price_cache():
     _fetch_quote.clear()
     _fetch_history.clear()
+    _fetch_fx.clear()
+    _fetch_currency.clear()

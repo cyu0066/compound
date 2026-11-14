@@ -17,6 +17,7 @@ class Holding:
     manual_price: Optional[float] = None
     live_price: Optional[float] = None
     price_source: str = "none"  # "live" | "manual" | "unavailable"
+    reported_currency: Optional[str] = None  # what the data provider says it trades in (not saved)
 
     @property
     def price(self) -> Optional[float]:

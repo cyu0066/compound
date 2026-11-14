@@ -43,6 +43,37 @@ def portfolio_summary(holdings: list, aud_usd: float, aud_nzd: float) -> pd.Data
     return pd.DataFrame(rows)
 
 
+def combine_by_ticker(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge rows for the same ticker held at different brokers into one row.
+
+    Shares and value are added up and the brokers are listed together
+    ("Broker A, Broker B"). Rows are only merged when the currency also matches,
+    so a mistyped currency stays visible instead of being silently blended in.
+    """
+    if df.empty:
+        return df
+
+    def brokers(series) -> str:
+        seen = []
+        for b in series:
+            b = (b or "").strip()
+            if b and b not in seen:
+                seen.append(b)
+        return ", ".join(seen)
+
+    return df.groupby(["Ticker", "Currency"], sort=False, as_index=False).agg(
+        Platform=("Platform", brokers),
+        Name=("Name", "first"),
+        Shares=("Shares", "sum"),
+        **{
+            "Price (native)": ("Price (native)", "first"),
+            "Price source": ("Price source", "first"),
+            "Value (AUD)": ("Value (AUD)", lambda v: v.sum(min_count=1)),
+        },
+    )[["Platform", "Name", "Ticker", "Shares", "Currency", "Price (native)", "Price source", "Value (AUD)"]]
+
+
 # ---------------------------------------------------------------------------
 # Growth projection maths
 # ---------------------------------------------------------------------------

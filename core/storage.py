@@ -32,6 +32,7 @@ def bundle_to_json(
     goals: list[Goal],
     watchlist: list[WatchlistItem],
     targets: dict | None = None,
+    history: list[dict] | None = None,
 ) -> str:
     """Package everything into one downloadable JSON file."""
     return json.dumps({
@@ -39,6 +40,10 @@ def bundle_to_json(
         "goals": [g.to_dict() for g in goals],
         "watchlist": [w.to_dict() for w in watchlist],
         "targets": {t: float(v) for t, v in (targets or {}).items()},
+        "history": [
+            {"date": str(r["date"]), "total_value_aud": float(r["total_value_aud"]), "note": str(r.get("note", ""))}
+            for r in (history or [])
+        ],
     }, indent=2)
 
 
@@ -46,6 +51,15 @@ def targets_from_json_str(s: str) -> dict:
     """Target weights ({ticker: percent}) from an uploaded bundle; empty if none saved."""
     data = json.loads(s)
     return {str(t): float(v) for t, v in (data.get("targets") or {}).items()}
+
+
+def history_from_json_str(s: str) -> list[dict]:
+    """Saved snapshots ([{date, total_value_aud, note}]) from an uploaded bundle; empty if none."""
+    data = json.loads(s)
+    return [
+        {"date": str(r["date"]), "total_value_aud": float(r["total_value_aud"]), "note": str(r.get("note", ""))}
+        for r in (data.get("history") or [])
+    ]
 
 
 def bundle_from_json_str(s: str) -> tuple[list[Holding], list[Goal], list[WatchlistItem]]:
