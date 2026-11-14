@@ -90,3 +90,46 @@ def test_bundle_roundtrip():
     assert h2[0].manual_price == 331.206
     assert g2[0].target_amount == 1000
     assert w2[0].ticker == "TSLA"
+
+
+# --- the same ticker at several brokers ----------------------------------------
+
+def test_same_ticker_at_two_brokers_becomes_one_row():
+    from core.calculator import portfolio_summary, combine_by_ticker
+    from core.models import Holding
+    holdings = [
+        Holding(name="NVIDIA Corp", ticker="NVDA", shares=3.0, currency="USD", platform="Broker A", manual_price=100.0),
+        Holding(name="NVIDIA", ticker="NVDA", shares=4.2014, currency="USD", platform="Broker B", manual_price=100.0),
+        Holding(name="Visa", ticker="V", shares=1.0, currency="USD", platform="Broker B", manual_price=50.0),
+    ]
+    combined = combine_by_ticker(portfolio_summary(holdings, aud_usd=0.5, aud_nzd=1.1))
+    nvda = combined[combined["Ticker"] == "NVDA"].iloc[0]
+    assert len(combined) == 2
+    assert nvda["Shares"] == 7.2014
+    assert nvda["Platform"] == "Broker A, Broker B"
+    assert nvda["Value (AUD)"] == 7.2014 * 100.0 / 0.5
+
+
+def test_same_ticker_in_different_currencies_stays_separate():
+    from core.calculator import portfolio_summary, combine_by_ticker
+    from core.models import Holding
+    holdings = [
+        Holding(name="NVDA", ticker="NVDA", shares=1, currency="USD", manual_price=100.0),
+        Holding(name="NVDA", ticker="NVDA", shares=1, currency="NZD", manual_price=100.0),
+    ]
+    assert len(combine_by_ticker(portfolio_summary(holdings, 0.5, 1.1))) == 2
+
+
+def test_combining_keeps_a_row_with_no_price_as_missing():
+    import math
+    from core.calculator import portfolio_summary, combine_by_ticker
+    from core.models import Holding
+    holdings = [Holding(name="X", ticker="X", shares=1, currency="USD", platform="A")]
+    combined = combine_by_ticker(portfolio_summary(holdings, 0.5, 1.1))
+    assert math.isnan(combined["Value (AUD)"].iloc[0])
+
+
+def test_combining_an_empty_table_is_fine():
+    import pandas as pd
+    from core.calculator import combine_by_ticker
+    assert combine_by_ticker(pd.DataFrame()).empty

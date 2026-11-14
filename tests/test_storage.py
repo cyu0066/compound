@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.models import Holding, Goal, WatchlistItem
-from core.storage import bundle_to_json, bundle_from_json_str, targets_from_json_str
+from core.storage import bundle_to_json, bundle_from_json_str, targets_from_json_str, history_from_json_str
 
 
 def _sample():
@@ -35,3 +35,13 @@ def test_old_files_without_a_targets_key_still_load():
     old_format = json.dumps({"holdings": [], "goals": [], "watchlist": []})
     assert targets_from_json_str(old_format) == {}
     assert bundle_from_json_str(old_format) == ([], [], [])
+
+
+def test_history_round_trip():
+    snaps = [{"date": "2026-11-14", "total_value_aud": 9382.28, "note": "first"}]
+    packed = bundle_to_json(*_sample(), history=snaps)
+    assert history_from_json_str(packed) == snaps
+
+
+def test_old_files_without_history_load_as_empty():
+    assert history_from_json_str(json.dumps({"holdings": []})) == []
