@@ -11,8 +11,8 @@ from types import SimpleNamespace
 
 import streamlit as st
 
-from core.calculator import portfolio_summary
-from core.prices import attach_live_prices
+from core.calculator import portfolio_summary, combine_by_ticker
+from core.prices import attach_live_prices, fetch_fx_rates
 from ui.state import init_state, keep_widget_state
 from ui.theme import apply_theme, DISCLAIMER
 
@@ -37,14 +37,23 @@ if st.session_state.use_live_prices:
     with st.spinner("Fetching live prices..."):
         st.session_state.holdings = attach_live_prices(st.session_state.holdings)
 
-df = portfolio_summary(st.session_state.holdings, st.session_state.aud_usd, st.session_state.aud_nzd)
+# Exchange rates: live when switched on and both are available, otherwise the manual ones from Settings.
+aud_usd, aud_nzd, fx_source = st.session_state.aud_usd, st.session_state.aud_nzd, "manual"
+if st.session_state.use_live_prices and st.session_state.use_live_fx:
+    live_fx = fetch_fx_rates()
+    if live_fx.get("aud_usd") and live_fx.get("aud_nzd"):
+        aud_usd, aud_nzd, fx_source = live_fx["aud_usd"], live_fx["aud_nzd"], "live"
+
+# One row per ticker: the same stock held at several brokers is added together.
+df = combine_by_ticker(portfolio_summary(st.session_state.holdings, aud_usd, aud_nzd))
 st.session_state["_ctx"] = SimpleNamespace(
     df=df,
     total_value=float(df["Value (AUD)"].sum(skipna=True)) if not df.empty else 0.0,
     missing=df[df["Value (AUD)"].isna()] if not df.empty else df,
     use_live_prices=st.session_state.use_live_prices,
-    aud_usd=st.session_state.aud_usd,
-    aud_nzd=st.session_state.aud_nzd,
+    aud_usd=aud_usd,
+    aud_nzd=aud_nzd,
+    fx_source=fx_source,
     autorefresh_available=AUTOREFRESH_AVAILABLE,
 )
 
