@@ -13,7 +13,6 @@ from core.storage import load_holdings, load_goals, load_watchlist
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
-HISTORY_PATH = DATA_DIR / "history.csv"
 
 TARGET_KEY_PREFIX = "target_"  # rebalancing target weights, one key per ticker
 N_SIMULATIONS = 5_000
@@ -22,6 +21,7 @@ DEFAULT_VOLATILITY_PCT = 15.0
 # Widget keys that must persist across pages, with their starting values.
 SETTING_DEFAULTS = {
     "use_live_prices": True,
+    "use_live_fx": True,
     "auto_refresh": False,
     "refresh_seconds": 60,
     "aud_usd": 0.717,
@@ -41,6 +41,7 @@ def init_state() -> None:
         st.session_state.goals = load_goals(DATA_DIR / "goals.json")
     if "watchlist" not in st.session_state:
         st.session_state.watchlist = load_watchlist(DATA_DIR / "watchlist.json")
+    st.session_state.setdefault("history", [])  # snapshots: [{date, total_value_aud, note}]
     for key, value in SETTING_DEFAULTS.items():
         st.session_state.setdefault(key, value)
 
